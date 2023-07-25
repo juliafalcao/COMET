@@ -48,8 +48,12 @@ from comet.models import (
     UnifiedMetric,
 )
 
-logger = logging.getLogger(__name__)
+from comet.custom_utils import *
 
+# run prep script
+prep()
+
+logger = logging.getLogger(__name__)
 
 def read_arguments() -> ArgumentParser:
     parser = ArgumentParser(description="Command for training COMET models.")
@@ -92,8 +96,12 @@ def initialize_trainer(configs) -> Trainer:
     trainer_args = namespace_to_dict(configs.trainer.init_args)
     lr_monitor = LearningRateMonitor(logging_interval="step")
     trainer_args["callbacks"] = [early_stop_callback, checkpoint_callback, lr_monitor]
+
+    # initialize WandB logger
+    trainer_args["logger"] = get_wandb_logger()
+
     print("TRAINER ARGUMENTS: ")
-    print(json.dumps(trainer_args, indent=4, default=lambda x: x.__dict__))
+    print(json.dumps(trainer_args, indent=4, default=default_jsonify))
     trainer = Trainer(**trainer_args)
     return trainer
 

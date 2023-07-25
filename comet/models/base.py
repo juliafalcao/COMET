@@ -44,6 +44,11 @@ from .utils import (
     restore_list_order,
 )
 
+from comet.custom_utils import *
+
+# run prep script
+prep()
+
 if "COMET_EMBEDDINGS_CACHE" in os.environ:
     CACHE_SIZE = int(os.environ["COMET_EMBEDDINGS_CACHE"])
 else:
@@ -51,7 +56,6 @@ else:
 
 
 logger = logging.getLogger(__name__)
-
 
 class CometModel(ptl.LightningModule, metaclass=abc.ABCMeta):
     """CometModel: Base class for all COMET models.
@@ -613,9 +617,10 @@ class CometModel(ptl.LightningModule, metaclass=abc.ABCMeta):
             category=UserWarning,
             message=".*Consider increasing the value of the `num_workers` argument` .*",
         )
+
         trainer = ptl.Trainer(
             devices=devices,
-            logger=False,
+            logger=get_wandb_logger(),
             callbacks=callbacks,
             accelerator=accelerator if gpus > 0 else "cpu",
             strategy=None if gpus < 2 else "ddp",

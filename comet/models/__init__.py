@@ -19,6 +19,7 @@ from typing import Union
 
 import yaml
 from huggingface_hub import snapshot_download
+import torch
 
 from .base import CometModel
 from .download_utils import download_model_legacy
@@ -61,21 +62,26 @@ def load_from_checkpoint(checkpoint_path: str) -> CometModel:
     Return:
         COMET model.
     """
-    checkpoint_path = Path(checkpoint_path)
+    checkpoint_Path = Path(checkpoint_path)
 
-    if not checkpoint_path.is_file():
-        raise Exception(f"Invalid checkpoint path: {checkpoint_path}")
+    if not checkpoint_Path.is_file():
+        raise Exception(f"Invalid checkpoint path: {checkpoint_Path}")
     
-    parent_folder = checkpoint_path.parents[1] # .parent.parent
+    parent_folder = checkpoint_Path.parents[1] # .parent.parent
     hparams_file = parent_folder / "hparams.yaml"
 
     if hparams_file.is_file():
         with open(hparams_file) as yaml_file:
             hparams = yaml.load(yaml_file.read(), Loader=yaml.FullLoader)
-        model_class = str2model[hparams["class_identifier"]]
-        model = model_class.load_from_checkpoint(
-            checkpoint_path, load_pretrained_weights=False
-        )
-        return model
     else:
-        raise Exception(f"hparams.yaml file is missing from {parent_folder}!")
+        torch_model_dict = torch.load(
+            checkpoint_path, map_location=(None if torch.cuda.is_available() else torch.device("cpu"))
+        )
+        hparams = torch_model_dict["hyper_parameters"]
+
+    model_class = str2model[hparams["class_identifier"]]
+    model = model_class.load_from_checkpoint(
+        checkpoint_path, load_pretrained_weights=False
+    )
+
+    return model
