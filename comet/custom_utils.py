@@ -27,8 +27,9 @@ def default_jsonify(elem):
 
 # returns WandbLogger with my standard parameters
 def get_wandb_logger() -> WandbLogger:
-    return WandbLogger(
-        project=os.getenv("PROJECT"),
-        name=os.getenv("RUN"),
-        log_model="all",
-    )
+    if not os.environ.get("WANDB_MODE") == "disabled":
+        return WandbLogger(
+            project=os.getenv("PROJECT"),
+            name=os.getenv("RUN"),
+            log_model="all",
+        )
