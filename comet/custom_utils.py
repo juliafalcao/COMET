@@ -31,5 +31,8 @@ def get_wandb_logger() -> WandbLogger:
         return WandbLogger(
             project=os.getenv("PROJECT"),
             name=os.getenv("RUN"),
-            log_model="all",
+            log_model=False,
         )
+    else:
+        print("ATTENTION: wandb is disabled through WANDB_MODE env! get_wandb_logger() returning null")
+        return None
